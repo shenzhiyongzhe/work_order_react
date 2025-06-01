@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply transition-colors duration-200 m-0 p-0 box-border;
+}
+.confirm-btn {
+  @apply bg-[#4376e0] text-white px-12 py-1 rounded-xl mr-20;
+}
+.input-focus {
+  @apply bg-white text-gray-800 placeholder-gray-400
+    focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent 
+    transition duration-200 ease-in-out;
+}
+.fancy-input {
+  @apply px-4 py-2 border border-transparent rounded-2xl shadow-sm 
+    bg-white text-gray-800 placeholder-gray-400
+    focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent 
+    transition duration-200 ease-in-out
+    hover:shadow-md;
+}
+.primary-input {
+  @apply border-2 rounded-lg py-1 px-2;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out;
+}
