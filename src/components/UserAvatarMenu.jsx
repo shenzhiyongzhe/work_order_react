@@ -41,7 +41,7 @@ export default function UserAvatarMenu()
         }
         catch (err)
         {
-            console.error("获取头像失败:", err);
+            console.error("获取头像失败:", err.message);
         }
     };
 
@@ -83,7 +83,7 @@ export default function UserAvatarMenu()
         console.log("res,", res)
         if (res)
         {
-            console.log("消息已读成功")
+            // console.log("消息已读成功")
             dispatch({ type: "MARK_AS_READ", payload: msg.id }); // 标记已读
             navigate(`/ticket/detail/${msg.payload.ticket_id}`) // 跳转到对应页面
             setShowMsgPopup(false);

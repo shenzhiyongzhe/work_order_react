@@ -5,10 +5,12 @@ import { useGlobalState } from "../Provider/GlobalStateProvider";
 import { Select } from "./Select";
 import { Dialog, Transition } from "@headlessui/react";
 import { priorityOptions, statusOptions } from "../../constants";
+import { useNavigate } from 'react-router-dom';
 
-
-export default function TicketFilterButton({ onFilter })
+export default function TicketFilterButton()
 {
+    const navigate = useNavigate();
+
     const { userList } = useGlobalState();
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -35,10 +37,33 @@ export default function TicketFilterButton({ onFilter })
                 dataToSend[key] = formData[key]
             }
         }
-        onFilter(dataToSend);
+        let str = Object.entries(dataToSend).map(([key, value]) => `${key}=${value}`).join('&');
+        if (str)
+        {
+            str = '?' + str;
+        }
+        navigate(`/orderList${str}`);
+        setFormData({
+            priority: "",
+            status: '',
+            type: "",
+            assignee: "",
+            cooperator: "",
+        });
         setIsOpen(false);
     };
 
+    const handleCancel = () =>
+    {
+        setFormData({
+            priority: "",
+            status: '',
+            type: "",
+            assignee: "",
+            cooperator: "",
+        });
+        setIsOpen(false);
+    }
     return (
         <div>
             <button
@@ -86,7 +111,7 @@ export default function TicketFilterButton({ onFilter })
                                 <div className="flex justify-end gap-2 mt-6">
                                     <button
                                         className="px-4 py-2 border rounded text-gray-700"
-                                        onClick={() => setIsOpen(false)}
+                                        onClick={handleCancel}
                                     >
                                         取消
                                     </button>

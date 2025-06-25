@@ -14,7 +14,7 @@ export const Select = ({ label, name, options = [], value, onChange, required = 
         >
             <option value="">请选择</option>
             {options.map((opt) => (
-                <option key={opt} value={opt}>
+                <option key={opt} value={opt} className="hover:bg-blue-400">
                     {opt}
                 </option>
             ))}

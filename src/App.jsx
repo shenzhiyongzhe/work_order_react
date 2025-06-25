@@ -11,9 +11,9 @@ import UserList from "./page/UsersManagement/UserList";
 import AddUser from "./page/UsersManagement/AddUser";
 import { GlobalStateProvider } from "./components/Provider/GlobalStateProvider";
 import Unauthorized from "./page/Unauthorized";
-import WaitingForReply from "./page/My/WaitingForReply";
-import WaitingForSettlement from "./page/My/WaitingForSettlement";
 import { WebSocketProvider } from "./components/Websocket/WebSocketContext";
+import Test from "./page/Test";
+import OrderList from "./components/OrderList";
 
 
 export default function App()
@@ -32,10 +32,10 @@ export default function App()
                                 <Route path="/ticket/detail/:ticket_id" element={<WorkOrderDetail />} />
                                 <Route path="/user/list" element={<UserList />} />
                                 <Route path="/user/add" element={<AddUser />} />
-                                <Route path="/my/waitingForReply" element={<WaitingForReply />} />
-                                <Route path="/my/waitingForSettlement" element={<WaitingForSettlement />} />
+                                <Route path="/orderList" element={<OrderList />} />
                             </Route>
                             <Route path="/unauthorized" element={<Unauthorized />} />
+                            <Route path="/test" element={<Test />} />
                         </Routes>
                     </WebSocketProvider>
                 </Suspense>

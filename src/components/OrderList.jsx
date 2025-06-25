@@ -1,43 +1,28 @@
 /* eslint-disable react/prop-types */
 import { MainView } from "./MainView"
 import http from '../utils/axios'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useGlobalState } from "./Provider/GlobalStateProvider";
 import { useState, useEffect, } from "react";
 import { statusColors } from "../constants";
-const OrderList = ({ listType }) =>
+import WorkOrderHeader from "./Header/Header";
+import * as XLSX from "xlsx";
+
+const OrderList = () =>
 {
     const navigate = useNavigate();
-    const { userList } = useGlobalState();
-    const { user } = useGlobalState();
+    const { user, userList } = useGlobalState();
+    const [searchParams] = useSearchParams();
+    const location = useLocation(); // 用来监听路径变化
+
     const [ticketList, setTicketList] = useState([])
+    const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, ticket: null });
+    const [showReviewerMenu, setShowReviewerMenu] = useState({ visible: false, x: 0, y: 0, ticket: null });
 
-    const [showReviewerMenu, setShowReviewerMenu] = useState({
-        visible: false,
-        x: 0,
-        y: 0,
-        ticket: null,
-    });
-
-    const [contextMenu, setContextMenu] = useState({
-        visible: false,
-        x: 0,
-        y: 0,
-        ticket: null,
-    });
-
-    const getTicketList = async (listType = "all") =>
+    const getTicketList = async () =>
     {
-        let params = {}
-
-        if (listType == "waitingForSettlement")
-        {
-            params = { "assignee": user.user_name }
-        }
-        else if (listType == "waitingForReply")
-        {
-            params = { "status": "待回复", "cooperator": user.user_name }
-        }
+        const params = Object.fromEntries(searchParams.entries());
+        console.log("查询参数:", params)
         const res = await http.get('/ticket/get_ticket_list', params)
         setTicketList(res.result)
 
@@ -45,17 +30,10 @@ const OrderList = ({ listType }) =>
 
     const handleContextMenu = (event, ticket) =>
     {
-        if (user.role != "admin")
-        {
-            return;
-        }
+        if (user.role != "admin") return;
+
         event.preventDefault();
-        setContextMenu({
-            visible: true,
-            x: event.pageX,
-            y: event.pageY,
-            ticket,
-        });
+        setContextMenu({ visible: true, x: event.pageX, y: event.pageY, ticket });
     };
 
     const handleCloseMenu = () =>
@@ -104,10 +82,98 @@ const OrderList = ({ listType }) =>
     {
         navigate(`/ticket/detail/${ticket.ticket_id}`)
     };
+    const handleSearch = async (keyword) =>
+    {
+        const res = await http.get('/ticket/search_ticket', { keyword })
+        setTicketList(res.result)
+    };
+    const handleSortToggle = async (category, value) =>
+    {
+        try
+        {
+            const res = await http.post('/ticket/sort_ticket', { sortField: category, sortOrder: value })
+            if (Array.isArray(res.result))
+            {
+                setTicketList(res.result)
 
+            }
+            else
+            {
+                setTicketList([])
+            }
+        } catch (error)
+        {
+            console.log(error)
+        }
+
+        console.log(category, value)
+    };
+
+    const handleClickMyOwn = async () =>
+    {
+        try
+        {
+            const res = await http.get('/ticket/get_my_own')
+            if (Array.isArray(res.result))
+            {
+                setTicketList(res.result)
+            }
+            else
+            {
+                setTicketList([])
+            }
+        } catch (error)
+        {
+            console.log(error.message)
+        }
+    }
+
+    const handleExport = () =>
+    {
+        const fieldMap = {
+            ticket_id: "工单号",
+            type: "工单类型",
+            clue_type: "线索值类型",
+            clue: "线索值",
+            client_id: "客户ID",
+            client_contact: "客户联系方式",
+            status: "状态",
+            priority: "优先级",
+            creator: "创建人",
+            assignee: "处理人",
+            cooperator: "配合处理人",
+            reviewer: "审核人",
+            start_dealing_at: "开始处理时间",
+            closed_at: "关闭时间",
+            created_at: "创建时间",
+            updated_at: "更新时间",
+            settled_at: "解决时间"
+            // 你可以继续添加其它字段映射
+        };
+        // 只导出映射字段
+        const exportData = ticketList.map(item =>
+        {
+            const obj = {};
+            Object.keys(fieldMap).forEach(key =>
+            {
+                obj[fieldMap[key]] = item[key];
+            });
+            return obj;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+        worksheet['!cols'] = Object.keys(fieldMap).map(() => ({ wch: 16 }));
+        worksheet['!rows'] = exportData.map(() => ({ hpx: 20 }));
+        worksheet['!rows'].unshift({ hpx: 15 });
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "工单");
+        XLSX.writeFile(workbook, "工单列表.xlsx");
+    }
     useEffect(() =>
     {
-        getTicketList(listType)
+        getTicketList()
         window.addEventListener("click", handleCloseMenu);
         window.addEventListener("click", handleCloseReviewerModal);
         return () =>
@@ -115,9 +181,10 @@ const OrderList = ({ listType }) =>
             window.removeEventListener("click", handleCloseMenu);
             window.removeEventListener("click", handleCloseReviewerModal);
         }
-    }, [])
+    }, [location.search])
     return (
         <MainView>
+            <WorkOrderHeader onSearch={handleSearch} onSort={handleSortToggle} onMyOwn={handleClickMyOwn} onExport={handleExport} />
             <div className="p-2">
                 <div className="overflow-auto border rounded-lg">
                     <table className="min-w-full bg-white divide-y divide-gray-200 text-xs">

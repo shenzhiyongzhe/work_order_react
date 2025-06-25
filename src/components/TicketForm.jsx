@@ -9,7 +9,8 @@ import { getDateTime } from "../utils/tool";
 import TypeSelector from "./Form/TypeSelector";
 import { AlphaNumericInput, Input } from "./Form/Input";
 import ContentInput from "./Form/ContentInput";
-
+import http from '../utils/axios'
+import { useNavigate } from 'react-router-dom';
 
 const priorities = ["低", "中", "高"];
 const clueTypeOptions = [
@@ -34,8 +35,7 @@ const DEFAULT_FORM = {
     attachments: ''
 };
 
-const TicketForm = ({ initialData = {}, onSubmit }) =>
-{
+const TicketForm = ({ initialData = {}, onSubmit }) => {
 
     const { userList, user } = useGlobalState();
 
@@ -64,109 +64,89 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
     // 触发刷新历史记录的标志
     const [refreshLog, setRefreshLog] = useState(false);
 
+    const navigate = useNavigate();
+
     // 切换状态来触发 useEffect
     const triggerLogRefresh = () => setRefreshLog(prev => !prev);
 
-    const handleChange = (e) =>
-    {
+    const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) =>
-    {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const dataToSend = new FormData()
-        if (formData.status == "待创建")
-        {
+        if (formData.status == "待创建") {
             // setFormData(prev => ({ ...prev, status: '待分配' }));
             formData.status = "待分配"
-            if (formData.assignee)
-            {
+            if (formData.assignee) {
                 formData.status = "待领取"
             }
             const content = contentInputRef.current.getContent()
             const fileList = contentInputRef.current.getFileList()
             formData.content = content;
-            for (let key in formData)
-            {
+            for (let key in formData) {
                 dataToSend.append(key, formData[key])
             }
-            fileList.forEach(item =>
-            {
+            fileList.forEach(item => {
                 dataToSend.append("attachments", item.file);
             });
         }
-        if (onSubmit)
-        {
+        if (onSubmit) {
             onSubmit(dataToSend);
         }
     };
 
-    const handleModalSelectConfirm = async () =>
-    {
+    const handleModalSelectConfirm = async () => {
         const selected = await openSelectModal(userList);
-        if (selected)
-        {
+        if (selected) {
             return selected;
-        } else
-        {
+        } else {
             return null;
         }
     };
 
-    const handleTicketInfoUpdate = async (type) =>
-    {
+    const handleTicketInfoUpdate = async (type) => {
         const dataToSend = { ...formData }
 
-        if (type == "assign_handler")
-        {
+        if (type == "assign_handler") {
             const select = await handleModalSelectConfirm()
-            if (!select)
-            {
+            if (!select) {
                 return;
             }
             dataToSend.assignee = select;
             dataToSend.status = "待领取"
         }
-        else if (type == "resign_handler")
-        {
+        else if (type == "resign_handler") {
             const select = await handleModalSelectConfirm()
-            if (!select)
-            {
+            if (!select) {
                 return;
             }
             dataToSend.assignee = select;
         }
-        else if (type == "confirm_dealing")
-        {
+        else if (type == "confirm_dealing") {
             dataToSend.status = "处理中";
             dataToSend.start_dealing_at = getDateTime()
         }
-        else if (type == "settled")
-        {
+        else if (type == "settled") {
             dataToSend.status = "已解决"
             dataToSend.settled_at = getDateTime()
         }
-        else if (type == "close")
-        {
+        else if (type == "close") {
             dataToSend.status = "关闭"
             dataToSend.settled_at = getDateTime()
         }
-        else if (type == "reject")
-        {
+        else if (type == "reject") {
             dataToSend.status = "待分配"
             dataToSend.assignee = ''
         }
-        else if (type == "reopen")
-        {
+        else if (type == "reopen") {
             dataToSend.status = "处理中"
         }
-        else if (type == "add_cooperator")
-        {
+        else if (type == "add_cooperator") {
             const select = await handleModalSelectConfirm()
-            if (!select)
-            {
+            if (!select) {
                 return;
             }
             dataToSend.status = "待回复"
@@ -174,18 +154,32 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
         }
 
         const res = await onSubmit(dataToSend)
-        if (res.success)
-        {
+        if (res.success) {
             setFormData({ ...dataToSend })
         }
-        else
-        {
+        else {
             console.log(res.message)
         }
     }
 
-    const action = useMemo(() =>
-    {
+    const deleteTicketForm = async (ticket_id) => {
+        console.log(ticket_id)
+        try {
+            const res = await http.delete(`/ticket/${ticket_id}`)
+            if (res.code == 200) {
+                alert("删除成功")
+                navigate('/ticket/list')
+            }
+            else {
+                alert("删除失败")
+            }
+        } catch (error) {
+            console.log(error)
+            alert("删除失败")
+        }
+
+    }
+    const action = useMemo(() => {
         const dynamicActions = [
             {
                 status: '待创建',
@@ -237,10 +231,8 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
                 allow: { role: "creator", permission: isCreator },
             },
         ];
-        return dynamicActions.find(item =>
-        {
-            if (item.status === "待创建")
-            {
+        return dynamicActions.find(item => {
+            if (item.status === "待创建") {
                 // 只有在没有 ticket_id（新增模式）时才返回
                 return !formData.ticket_id;
             }
@@ -255,10 +247,8 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
     }, [formData.status, formData.creator, formData.assignee, isCreator, isAssignee, isCooperator, user.user_name]);
 
 
-    useEffect(() =>
-    {
-        if (initialData && initialData.ticket_id)
-        {
+    useEffect(() => {
+        if (initialData && initialData.ticket_id) {
             setFormData({ ...DEFAULT_FORM, ...initialData }); // 统一重置表单，避免残留
             triggerLogRefresh();
             setIsCreator(initialData.creator === user?.user_name);
@@ -269,14 +259,10 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
     }, [initialData]);
 
 
-    // useEffect(() =>
-    // {
-    //     // console.log("item status:", initialData)
-    //     console.log("setFormData status:", formData.status)
-    //     console.log("isCooperator isCooperator:", initialData?.cooperator)
-    //     console.log("user_name:", user?.user_name)
+    useEffect(() => {
+        console.log("form data:", JSON.stringify(formData))
 
-    // }, [initialData])
+    }, [initialData])
 
     return (
 
@@ -346,6 +332,14 @@ const TicketForm = ({ initialData = {}, onSubmit }) =>
                             <button type="button" className="py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                                 onClick={() => handleTicketInfoUpdate("add_cooperator")} >
                                 添加配合处理人
+                            </button>
+                        )
+                    }
+                    {
+                        isCreator && ["待领取"].includes(formData.status) && (
+                            <button type="button" className="py-2 rounded bg-red-500 text-white hover:bg-red-800"
+                                onClick={() => deleteTicketForm(formData.ticket_id)} >
+                                删除
                             </button>
                         )
                     }

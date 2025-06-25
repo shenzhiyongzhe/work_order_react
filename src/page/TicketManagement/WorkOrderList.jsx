@@ -7,11 +7,8 @@ import * as XLSX from "xlsx";
 import { useGlobalState } from "../../components/Provider/GlobalStateProvider";
 import { statusColors } from "../../constants";
 
-// import { useTicketSSE } from "../../components/useTicketSSE";
 
-
-const WorkOrderList = () =>
-{
+const WorkOrderList = () => {
     const navigate = useNavigate();
     const { userList } = useGlobalState();
     const { user } = useGlobalState();
@@ -31,16 +28,13 @@ const WorkOrderList = () =>
         ticket: null,
     });
 
-    const getTicketList = async () =>
-    {
+    const getTicketList = async () => {
         const res = await http.get('/ticket/get_ticket_list')
         setTicketList(res.result)
     }
 
-    const handleContextMenu = (event, ticket) =>
-    {
-        if (user.role != "admin")
-        {
+    const handleContextMenu = (event, ticket) => {
+        if (user.role != "admin") {
             return;
         }
         event.preventDefault();
@@ -52,16 +46,13 @@ const WorkOrderList = () =>
         });
     };
 
-    const handleCloseMenu = () =>
-    {
+    const handleCloseMenu = () => {
         setContextMenu({ visible: false, x: 0, y: 0, ticket: null });
     };
-    const handleCloseReviewerModal = () =>
-    {
+    const handleCloseReviewerModal = () => {
         setShowReviewerMenu({ visible: false, x: 0, y: 0, ticket: null });
     }
-    const handleSettingReviewer = (event, ticket) =>
-    {
+    const handleSettingReviewer = (event, ticket) => {
 
         event.stopPropagation(); // 关键：阻止冒泡，避免立即触发关闭
         handleCloseMenu()
@@ -72,12 +63,9 @@ const WorkOrderList = () =>
             ticket,
         });
     };
-    const handleSelectReviewer = (name) =>
-    {
-        const newList = ticketList.map(item =>
-        {
-            if (item?.ticket_id == showReviewerMenu.ticket.ticket_id)
-            {
+    const handleSelectReviewer = (name) => {
+        const newList = ticketList.map(item => {
+            if (item?.ticket_id == showReviewerMenu.ticket.ticket_id) {
                 item.reviewer = name
                 http.post('/ticket/update_ticket', item)
             }
@@ -87,70 +75,54 @@ const WorkOrderList = () =>
         handleCloseReviewerModal()
     }
 
-    const handleReopen = () =>
-    {
+    const handleReopen = () => {
         alert(`编辑工单：${contextMenu.ticket.ticket_id}`);
         // 或者导航到编辑页，或打开编辑对话框
         handleCloseMenu();
     };
 
-    const handleDoubleClick = (ticket) =>
-    {
+    const handleDoubleClick = (ticket) => {
         navigate(`/ticket/detail/${ticket.ticket_id}`)
     };
 
 
-    const handleSearch = async (keyword) =>
-    {
+    const handleSearch = async (keyword) => {
         const res = await http.get('/ticket/search_ticket', { keyword })
         setTicketList(res.result)
     };
-    const handleFilter = async (obj) =>
-    {
-        const res = await http.get('/ticket/filter_ticket', obj)
-        setTicketList(res.result)
-    };
-    const handleSortToggle = async (category, value) =>
-    {
-        try
-        {
+
+    const handleSortToggle = async (category, value) => {
+        try {
             const res = await http.post('/ticket/sort_ticket', { sortField: category, sortOrder: value })
-            if (Array.isArray(res.result))
-            {
+            if (Array.isArray(res.result)) {
                 setTicketList(res.result)
 
             }
-            else
-            {
+            else {
                 setTicketList([])
             }
-        } catch (error)
-        {
+        } catch (error) {
             console.log(error)
         }
 
         console.log(category, value)
     };
-    const handleClickMyOwn = async () =>
-    {
-        try
-        {
+
+    const handleClickMyOwn = async () => {
+        try {
             const res = await http.get('/ticket/get_my_own')
-            if (Array.isArray(res.result))
-            {
+            if (Array.isArray(res.result)) {
                 setTicketList(res.result)
             }
-            else
-            {
+            else {
                 setTicketList([])
             }
-        } catch (error)
-        {
+        } catch (error) {
             console.log(error.message)
         }
     }
-    const handleExport = () =>
-    {
+
+    const handleExport = () => {
         const fieldMap = {
             ticket_id: "工单号",
             type: "工单类型",
@@ -172,11 +144,9 @@ const WorkOrderList = () =>
             // 你可以继续添加其它字段映射
         };
         // 只导出映射字段
-        const exportData = ticketList.map(item =>
-        {
+        const exportData = ticketList.map(item => {
             const obj = {};
-            Object.keys(fieldMap).forEach(key =>
-            {
+            Object.keys(fieldMap).forEach(key => {
                 obj[fieldMap[key]] = item[key];
             });
             return obj;
@@ -192,14 +162,12 @@ const WorkOrderList = () =>
         XLSX.utils.book_append_sheet(workbook, worksheet, "工单");
         XLSX.writeFile(workbook, "工单列表.xlsx");
     }
-    useEffect(() =>
-    {
+    useEffect(() => {
         getTicketList()
 
         window.addEventListener("click", handleCloseMenu);
         window.addEventListener("click", handleCloseReviewerModal);
-        return () =>
-        {
+        return () => {
             window.removeEventListener("click", handleCloseMenu);
             window.removeEventListener("click", handleCloseReviewerModal);
         }
@@ -210,7 +178,7 @@ const WorkOrderList = () =>
     // });
     return (
         <MainView>
-            <Header onSearch={handleSearch} onFilter={handleFilter} onSort={handleSortToggle} onMyOwn={handleClickMyOwn} onExport={handleExport}></Header>
+            <Header onSearch={handleSearch} onSort={handleSortToggle} onMyOwn={handleClickMyOwn} onExport={handleExport}></Header>
             <div className="p-2">
                 <div className="overflow-auto border rounded-lg">
                     <table className="min-w-full bg-white divide-y divide-gray-200 text-xs">
@@ -243,7 +211,7 @@ const WorkOrderList = () =>
                                     <td className="px-4 py-2 text-gray-600 text-center">{ticket.creator}</td>
                                     <td className="px-4 py-2 text-gray-600 text-center" >{ticket.reviewer}</td>
                                     <td className="px-4 py-2 text-center">
-                                        <div className={`"px-4 py-2 rounded text-xs font-medium appearance-none cursor-not-allowed  focus:outline-none focus:ring-2 ${statusColors[ticket.status]} || bg-gray-100 text-gray-800"`}>
+                                        <div className={`"px-4 py-2 rounded text-xs font-medium appearance-none cursor-not-allowed  focus:outline-none focus:ring-2 ${statusColors[ticket.status]} text-white"`}>
                                             {ticket.status ?? "---"}
                                         </div>
                                     </td>

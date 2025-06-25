@@ -4,7 +4,7 @@ import SortMenu from "../Form/SortMenu";
 import SearchBox from "../Form/SearchBox";
 import TicketFilterButton from "../Form/TicketFilterButton";
 
-const WorkOrderHeader = ({ onSearch, onFilter, onSort, onMyOwn, onExport }) =>
+const WorkOrderHeader = ({ onSearch, onSort, onMyOwn, onExport }) =>
 {
     return (
         <div className="p-2">
@@ -12,7 +12,7 @@ const WorkOrderHeader = ({ onSearch, onFilter, onSort, onMyOwn, onExport }) =>
                 <div className="flex items-center flex-1 gap-4">
                     <SearchBox onSearch={onSearch} />
                     <SortMenu onSort={onSort} />
-                    <TicketFilterButton onFilter={onFilter} />
+                    <TicketFilterButton />
                     <div className="px-4 py-2 bg-blue-500 text-white rounded hover:cursor-pointer hover:bg-blue-700" onClick={onMyOwn}>我的</div>
                 </div>
                 <div className="flex gap-4">

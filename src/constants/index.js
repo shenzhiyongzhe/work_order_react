@@ -1,8 +1,8 @@
 
 
 import { FaChartBar, } from "react-icons/fa";
-// const base_ip = '192.168.1.41:3004'
-const base_ip = '192.168.1.41:8000'
+const base_ip = '192.168.21.51:8000'
+// const base_ip = 'localhost:7999'
 export const BASE_URL = `http://${base_ip}`;
 export const wss_url = `ws://${base_ip}/ws`
 export const statusColors = {
@@ -12,10 +12,10 @@ export const statusColors = {
     "待回复": "bg-green-300 text-white",
     "已回复": "bg-green-300 text-white",
     "已解决": "bg-blue-400 text-white",
-    "关闭": "bg-gray-100 text-white",
+    "关闭": "bg-gray-400 text-white",
 };
 
-export const statusOptions = ["待创建", "待分配", "处理中", "待回复", "已回复", "已解决", "关闭"]
+export const statusOptions = ["待分配", "待领取", "处理中", "待回复", "已回复", "已解决", "关闭"]
 export const priorityOptions = ["低", "中", "高"]
 export const sidebarLinks = [
     {
@@ -37,12 +37,12 @@ export const sidebarLinks = [
         title: "个人列表",
         subMenu: [
             {
-                href: "/my/waitingForSettlement",
+                href: "/orderList?status=待处理",
                 icon: FaChartBar,
                 text: "待处理",
             },
             {
-                href: "/my/waitingForReply",
+                href: "/orderList?status=待回复",
                 icon: FaChartBar,
                 text: "待回复",
             },
